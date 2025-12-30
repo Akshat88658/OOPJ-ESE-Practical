@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Course CRUD Dashboard</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+        }
+
+        .container {
+            width: 950px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 25px;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .form {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        input {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            outline: none;
+            font-size: 15px;
+        }
+
+        button {
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #00c6ff, #0072ff);
+            color: #fff;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+
+        .refresh {
+            margin-bottom: 15px;
+            text-align: right;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        thead {
+            background: rgba(255,255,255,0.15);
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+        }
+
+        tbody tr:hover {
+            background: rgba(255,255,255,0.08);
+        }
+
+        .delete-btn {
+            background: #ff4d4d;
+        }
+
+        .delete-btn:hover {
+            background: #ff1a1a;
+        }
+
+        .empty {
+            text-align: center;
+            opacity: 0.7;
+            padding: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>🔥 Course CRUD Dashboard</h1>
+
+    <!-- ADD COURSE FORM -->
+    <div class="form">
+        <input type="text" id="name" placeholder="Course Name">
+        <input type="text" id="description" placeholder="Description">
+        <button onclick="addCourse()">Add Course</button>
+    </div>
+
+    <!-- REFRESH -->
+    <div class="refresh">
+        <button onclick="getCourses()">Refresh Courses</button>
+    </div>
+
+    <!-- TABLE -->
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Action</th>
+        </tr>
+        </thead>
+        <tbody id="courseTable">
+        <tr class="empty">
+            <td colspan="4">No courses available 😴</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    const baseUrl = "http://localhost:8081/courses";
+
+    // ADD COURSE
+    function addCourse() {
+        const name = document.getElementById("name").value;
+        const description = document.getElementById("description").value;
+
+        if (!name || !description) {
+            alert("Please fill all fields");
+            return;
+        }
+
+        fetch(baseUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, description })
+        })
+            .then(res => res.json())
+            .then(() => {
+                document.getElementById("name").value = "";
+                document.getElementById("description").value = "";
+                getCourses();
+            });
+    }
+
+    // GET COURSES
+    function getCourses() {
+        fetch(baseUrl)
+            .then(res => res.json())
+            .then(data => {
+                const table = document.getElementById("courseTable");
+                table.innerHTML = "";
+
+                if (data.length === 0) {
+                    table.innerHTML = `<tr class="empty"><td colspan="4">No courses available 😴</td></tr>`;
+                    return;
+                }
+
+                data.forEach(c => {
+                    table.innerHTML += `
+                    <tr>
+                        <td>${c.id}</td>
+                        <td>${c.name}</td>
+                        <td>${c.description}</td>
+                        <td>
+                            <button class="delete-btn" onclick="deleteCourse(${c.id})">
+                                Delete
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                });
+            });
+    }
+
+    // DELETE COURSE
+    function deleteCourse(id) {
+        if (!confirm("Are you sure you want to delete this course?")) return;
+
+        fetch(`${baseUrl}/${id}`, {
+            method: "DELETE"
+        })
+            .then(() => {
+                getCourses();
+            });
+    }
+
+    // LOAD DATA ON PAGE LOAD
+    getCourses();
+</script>
+
+</body>
+</html>
